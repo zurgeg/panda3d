@@ -4,7 +4,7 @@ jobs:
   makepanda:
     strategy:
       matrix:
-        os: [ubuntu-16.04, windows-2016, macOS-10.14]
+        os: [ubuntu-16.04, windows-2019, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v1
@@ -34,7 +34,7 @@ jobs:
         python-version: 3.7
     - name: Build Python 3.7
       run: |
-        python makepanda/makepanda.py --git-commit=${{github.sha}} --outputdir=built --everything --no-eigen --python-incdir=$pythonLocation/include --python-libdir=$pythonLocation/lib --verbose --threads=4
+        python makepanda/makepanda.py --git-commit=${{github.sha}} --outputdir=built --everything --no-eigen --python-incdir=$pythonLocation/include --python-libdir=$pythonLocation/lib --verbose --threads=4 --windows-sdk=10 --msvc-version=14.2
     - name: Test Python 3.7
       shell: bash
       run: |
@@ -46,7 +46,7 @@ jobs:
         python-version: 2.7
     - name: Build Python 2.7
       run: |
-        python makepanda/makepanda.py --no-copy-python --git-commit=${{github.sha}} --outputdir=built --everything --no-eigen --python-incdir=$pythonLocation/include --python-libdir=$pythonLocation/lib --verbose --threads=4
+        python makepanda/makepanda.py --no-copy-python --git-commit=${{github.sha}} --outputdir=built --everything --no-eigen --python-incdir=$pythonLocation/include --python-libdir=$pythonLocation/lib --verbose --threads=4 --windows-sdk=10 --msvc-version=14.2
     - name: Test Python 2.7
       shell: bash
       run: |
