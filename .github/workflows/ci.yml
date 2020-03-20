@@ -344,6 +344,27 @@ jobs:
         llvm-cov show $(grep -Rl LLVM_PROFILE_FILE . | sed 's/^/-object /') -instr-profile=coverage.profdata > coverage.txt
         bash <(curl -s https://codecov.io/bash)
 
+    - name: Upload CMakeError.log
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: CMakeError.log
+        path: build/CMakeFiles/CMakeError.log
+
+    - name: Upload CMakeOutput.log
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: CMakeOutput.log
+        path: build/CMakeFiles/CMakeOutput.log
+
+    - name: Upload CMakeCache.txt
+      if: failure()
+      uses: actions/upload-artifact@v1
+      with:
+        name: CMakeCache.txt
+        path: build/CMakeCache.txt
+
   makepanda:
     strategy:
       matrix:
