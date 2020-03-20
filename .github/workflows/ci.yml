@@ -203,6 +203,8 @@ jobs:
       if: contains(matrix.python, 'YES')
       working-directory: build
       shell: bash
+      env:
+        PYTHONPATH: .
       run: |
         PYTHON_EXECUTABLE=$(grep '_Python_EXECUTABLE:INTERNAL' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest
@@ -232,6 +234,8 @@ jobs:
       if: contains(matrix.python, 'YES')
       working-directory: build
       shell: bash
+      env:
+        PYTHONPATH: .
       run: |
         PYTHON_EXECUTABLE=$(grep '_Python_EXECUTABLE:INTERNAL' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest
@@ -261,6 +265,8 @@ jobs:
       if: contains(matrix.python, 'YES')
       working-directory: build
       shell: bash
+      env:
+        PYTHONPATH: .
       run: |
         PYTHON_EXECUTABLE=$(grep '_Python_EXECUTABLE:INTERNAL' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest pytest-cov
@@ -291,6 +297,8 @@ jobs:
       if: contains(matrix.python, 'YES')
       working-directory: build
       shell: bash
+      env:
+        PYTHONPATH: .
       run: |
         PYTHON_EXECUTABLE=$(grep '_Python_EXECUTABLE:INTERNAL' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest pytest-cov
@@ -321,6 +329,8 @@ jobs:
       if: contains(matrix.python, 'YES')
       working-directory: build
       shell: bash
+      env:
+        PYTHONPATH: .
       run: |
         PYTHON_EXECUTABLE=$(grep '_Python_EXECUTABLE:INTERNAL' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest pytest-cov
