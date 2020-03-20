@@ -206,7 +206,7 @@ jobs:
       run: |
         PYTHON_EXECUTABLE=$(grep 'Python_EXECUTABLE:FILEPATH' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest
-        ctest -V -C ${{ matrix.config }}
+        $PYTHON_EXECUTABLE -m pytest -v ../tests
       # END B
 
     - name: Setup Python (Python 3.5)
@@ -235,7 +235,7 @@ jobs:
       run: |
         PYTHON_EXECUTABLE=$(grep 'Python_EXECUTABLE:FILEPATH' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest
-        ctest -V -C ${{ matrix.config }}
+        $PYTHON_EXECUTABLE -m pytest -v ../tests
       # END B
 
     - name: Setup Python (Python 3.6)
@@ -265,7 +265,7 @@ jobs:
         PYTHON_EXECUTABLE=$(grep 'Python_EXECUTABLE:FILEPATH' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest pytest-cov
         export COVERAGE_FILE=.coverage.$RANDOM LLVM_PROFILE_FILE=$PWD/pid-%p.profraw
-        ctest -V -C ${{ matrix.config }}
+        $PYTHON_EXECUTABLE -m pytest -v ../tests
       # END B
 
     - name: Setup Python (Python 3.7)
@@ -295,7 +295,7 @@ jobs:
         PYTHON_EXECUTABLE=$(grep 'Python_EXECUTABLE:FILEPATH' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest pytest-cov
         export COVERAGE_FILE=.coverage.$RANDOM LLVM_PROFILE_FILE=$PWD/pid-%p.profraw
-        ctest -V -C ${{ matrix.config }}
+        $PYTHON_EXECUTABLE -m pytest -v ../tests
       # END B
 
     - name: Setup Python (Python 3.8)
@@ -325,7 +325,7 @@ jobs:
         PYTHON_EXECUTABLE=$(grep 'Python_EXECUTABLE:FILEPATH' CMakeCache.txt | sed 's/.*=//')
         $PYTHON_EXECUTABLE -m pip install pytest pytest-cov
         export COVERAGE_FILE=.coverage.$RANDOM LLVM_PROFILE_FILE=$PWD/pid-%p.profraw
-        ctest -V -C ${{ matrix.config }}
+        $PYTHON_EXECUTABLE -m pytest -v ../tests
       # END B
 
     - name: Upload coverage reports
