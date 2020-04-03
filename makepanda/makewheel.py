@@ -1,10 +1,5 @@
 """
 Generates a wheel (.whl) file from the output of makepanda.
-
-Since the wheel requires special linking, this will only work if compiled with
-the `--wheel` parameter.
-
-Please keep this file work with Panda3D 1.9 until that reaches EOL.
 """
 from __future__ import print_function, unicode_literals
 from distutils.util import get_platform
@@ -20,7 +15,7 @@ import tempfile
 import subprocess
 from distutils.sysconfig import get_config_var
 from optparse import OptionParser
-from makepandacore import ColorText, LocateBinary, ParsePandaVersion, GetExtensionSuffix, SetVerbose, GetVerbose, GetMetadataValue
+from makepandacore import ColorText, LocateBinary, GetExtensionSuffix, SetVerbose, GetVerbose, GetMetadataValue
 from base64 import urlsafe_b64encode
 
 
@@ -33,6 +28,9 @@ def get_abi_tag():
             return soabi.replace('.', '_').replace('-', '_')
 
     soabi = 'cp%d%d' % (sys.version_info[:2])
+
+    if sys.version_info >= (3, 8):
+        return soabi
 
     debug_flag = get_config_var('Py_DEBUG')
     if (debug_flag is None and hasattr(sys, 'gettotalrefcount')) or debug_flag:
@@ -94,7 +92,7 @@ EXCLUDE_EXT = [".pyc", ".pyo", ".N", ".prebuilt", ".xcf", ".plist", ".vcproj", "
 # Plug-ins to install.
 PLUGIN_LIBS = ["pandagl", "pandagles", "pandagles2", "pandadx9", "p3tinydisplay", "p3ptloader", "p3assimp", "p3ffmpeg", "p3openal_audio", "p3fmod_audio"]
 
-# Libraries included in manylinux ABI that should be ignored.  See PEP 513/571.
+# Libraries included in manylinux ABI that should be ignored.  See PEP 513/571/599.
 MANYLINUX_LIBS = [
     "libgcc_s.so.1", "libstdc++.so.6", "libm.so.6", "libdl.so.2", "librt.so.1",
     "libcrypt.so.1", "libc.so.6", "libnsl.so.1", "libutil.so.1",
@@ -118,6 +116,8 @@ Root-Is-Purelib: false
 Tag: {0}-{1}-{2}
 """
 
+PROJECT_URLS = dict([line.split('=', 1) for line in GetMetadataValue('project_urls').strip().splitlines()])
+
 METADATA = {
     "license": GetMetadataValue('license'),
     "name": GetMetadataValue('name'),
@@ -126,9 +126,7 @@ METADATA = {
     "summary": GetMetadataValue('description'),
     "extensions": {
         "python.details": {
-            "project_urls": {
-                "Home": GetMetadataValue('url'),
-            },
+            "project_urls": dict(PROJECT_URLS, Home=GetMetadataValue('url')),
             "document_names": {
                 "license": "LICENSE.txt"
             },
@@ -173,15 +171,18 @@ questions.
 PANDA3D_TOOLS_INIT = """import os, sys
 import panda3d
 
+dir = os.path.dirname(panda3d.__file__)
+del panda3d
+
 if sys.platform in ('win32', 'cygwin'):
     path_var = 'PATH'
+    if hasattr(os, 'add_dll_directory'):
+        os.add_dll_directory(dir)
 elif sys.platform == 'darwin':
     path_var = 'DYLD_LIBRARY_PATH'
 else:
     path_var = 'LD_LIBRARY_PATH'
 
-dir = os.path.dirname(panda3d.__file__)
-del panda3d
 if not os.environ.get(path_var):
     os.environ[path_var] = dir
 else:
@@ -406,6 +407,7 @@ class WheelFile(object):
                     deps_path = '@executable_path/../Frameworks'
                 else:
                     deps_path = '@loader_path'
+                remove_signature = False
                 loader_path = [os.path.dirname(source_path)]
                 for dep in deps:
                     if dep.endswith('/Python'):
@@ -438,6 +440,11 @@ class WheelFile(object):
                         continue
 
                     subprocess.call(["install_name_tool", "-change", dep, new_dep, temp.name])
+                    remove_signature = True
+
+                # Remove the codesign signature if we modified the library.
+                if remove_signature:
+                    subprocess.call(["codesign", "--remove-signature", temp.name])
             else:
                 # On other unixes, we just add dependencies normally.
                 for dep in deps:
@@ -529,10 +536,14 @@ def makewheel(version, output_dir, platform=None):
         else:
             print("Could not find platform.dat in build directory")
             platform = get_platform()
-            if platform.startswith("linux-"):
-                # Is this manylinux1?
-                if os.path.isfile("/lib/libc-2.5.so") and os.path.isdir("/opt/python"):
+            if platform.startswith("linux-") and os.path.isdir("/opt/python"):
+                # Is this manylinux?
+                if os.path.isfile("/lib/libc-2.5.so") or os.path.isfile("/lib64/libc-2.5.so"):
                     platform = platform.replace("linux", "manylinux1")
+                elif os.path.isfile("/lib/libc-2.12.so") or os.path.isfile("/lib64/libc-2.12.so"):
+                    platform = platform.replace("linux", "manylinux2010")
+                elif os.path.isfile("/lib/libc-2.17.so") or os.path.isfile("/lib64/libc-2.17.so"):
+                    platform = platform.replace("linux", "manylinux2014")
 
     platform = platform.replace('-', '_').replace('.', '_')
 
@@ -565,6 +576,7 @@ def makewheel(version, output_dir, platform=None):
         "Summary: {summary}\n" \
         "License: {license}\n".format(**METADATA),
         "Home-page: {0}\n".format(homepage),
+    ] + ["Project-URL: {0}, {1}\n".format(*url) for url in PROJECT_URLS.items()] + [
         "Author: {0}\n".format(author),
         "Author-email: {0}\n".format(email),
         "Platform: {0}\n".format(platform),
@@ -596,10 +608,23 @@ def makewheel(version, output_dir, platform=None):
 
     # Write the panda3d tree.  We use a custom empty __init__ since the
     # default one adds the bin directory to the PATH, which we don't have.
-    whl.write_file_data('panda3d/__init__.py', """"Python bindings for the Panda3D libraries"
+    p3d_init = """"Python bindings for the Panda3D libraries"
 
 __version__ = '{0}'
-""".format(version))
+""".format(version)
+
+    if '27' in ABI_TAG:
+        p3d_init += """
+if __debug__:
+    import sys
+    if sys.version_info < (3, 0):
+        sys.stderr.write("WARNING: Python 2.7 will reach EOL after December 31, 2019.\\n")
+        sys.stderr.write("To suppress this warning, upgrade to Python 3.\\n")
+        sys.stderr.flush()
+    del sys
+"""
+
+    whl.write_file_data('panda3d/__init__.py', p3d_init)
 
     # Copy the extension modules from the panda3d directory.
     ext_suffix = GetExtensionSuffix()
@@ -663,6 +688,13 @@ __version__ = '{0}'
         if file.endswith('.py'):
             whl.write_file('pandac/' + file, os.path.join(pandac_dir, file))
 
+    # Let's also add the interrogate databases.
+    input_dir = os.path.join(pandac_dir, 'input')
+    if os.path.isdir(input_dir):
+        for file in os.listdir(input_dir):
+            if file.endswith('.in'):
+                whl.write_file('pandac/input/' + file, os.path.join(input_dir, file))
+
     # Add a panda3d-tools directory containing the executables.
     entry_points = '[console_scripts]\n'
     entry_points += 'eggcacher = direct.directscripts.eggcacher:main\n'
@@ -679,10 +711,15 @@ __version__ = '{0}'
             # Put the .exe files inside the panda3d-tools directory.
             whl.write_file('panda3d_tools/' + file, source_path)
 
+            if basename.endswith('_bin'):
+                # These tools won't be invoked by the user directly.
+                continue
+
             # Tell pip to create a wrapper script.
             funcname = basename.replace('-', '_')
             entry_points += '{0} = panda3d_tools:{1}\n'.format(basename, funcname)
             tools_init += '{0} = lambda: _exec_tool({1!r})\n'.format(funcname, file)
+
     entry_points += '[distutils.commands]\n'
     entry_points += 'build_apps = direct.dist.commands:build_apps\n'
     entry_points += 'bdist_apps = direct.dist.commands:bdist_apps\n'
@@ -708,14 +745,22 @@ __version__ = '{0}'
         pylib_path = os.path.join(get_config_var('LIBDIR'), pylib_name)
     else:
         pylib_name = get_config_var('LDLIBRARY')
-        pylib_path = os.path.join(get_config_var('LIBDIR'), pylib_name)
-    whl.write_file('deploy_libs/' + pylib_name, pylib_path)
+        pylib_arch = get_config_var('MULTIARCH')
+        libdir = get_config_var('LIBDIR')
+        if pylib_arch and os.path.exists(os.path.join(libdir, pylib_arch, pylib_name)):
+            pylib_path = os.path.join(libdir, pylib_arch, pylib_name)
+        else:
+            pylib_path = os.path.join(libdir, pylib_name)
+
+    # If Python was linked statically, we don't need to include this.
+    if not pylib_name.endswith('.a'):
+        whl.write_file('deploy_libs/' + pylib_name, pylib_path)
 
     whl.close()
 
 
 if __name__ == "__main__":
-    version = ParsePandaVersion("dtool/PandaVersion.pp")
+    version = GetMetadataValue('version')
 
     parser = OptionParser()
     parser.add_option('', '--version', dest = 'version', help = 'Panda3D version number (default: %s)' % (version), default = version)

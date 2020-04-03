@@ -86,6 +86,18 @@ ConfigVariableBool swapbuffer_framelock
 ("swapbuffer-framelock", false,
  PRC_DESC("Set this true to enable HW swapbuffer frame-lock on 3dlabs cards"));
 
+ConfigVariableBool paste_emit_keystrokes
+("paste-emit-keystrokes", true,
+ PRC_DESC("Handle paste events (Ctrl-V) as separate keystroke events for each "
+          "pasted character."));
+
+ConfigVariableBool disable_message_loop
+("disable-message-loop", false,
+ PRC_DESC("If this is false, Panda will process messages from the Windows "
+          "message loop, which is required for normal operation.  You may set "
+          "this to true if some other UI framework (such as Tcl/Tk) needs "
+          "exclusive ownership of the message loop."));
+
 /**
  * Initializes the library.  This must be called at least once before any of
  * the functions or classes in this library can be used.  Normally it will be
