@@ -111,7 +111,13 @@ get_modelview_transform(const CullTraverser *trav) const {
  */
 INLINE CPT(TransformState) CullTraverserData::
 get_internal_transform(const CullTraverser *trav) const {
-  return trav->get_scene()->get_cs_world_transform()->compose(_net_transform);
+  const TransformState *cs_world_transform = trav->get_scene()->get_cs_world_transform();
+  if (_instances == nullptr) {
+    return cs_world_transform->compose(_net_transform);
+  } else {
+    // The net transform is in the instance list and will be applied later.
+    return cs_world_transform;
+  }
 }
 
 /**

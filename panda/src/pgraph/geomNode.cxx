@@ -527,15 +527,12 @@ add_for_draw(CullTraverser *trav, CullTraverserData &data) {
     }
 
     if (data._instances != nullptr) {
-      // Draw each individual instance.
-      CPT(TransformState) cs_world_transform = trav->get_scene()->get_cs_world_transform();
-
-      for (const InstanceList::Instance &instance : *data._instances) {
-        CullableObject *object =
-          new CullableObject(geom, state,
-            cs_world_transform->compose(instance.get_transform()));
-        trav->get_cull_handler()->record_object(object, trav);
-      }
+      // Draw each individual instance.  We don't bother culling each
+      // individual Geom for each instance; that is probably way too slow.
+      CullableObject *object =
+        new CullableObject(std::move(geom), std::move(state), internal_transform);
+      object->_instances = data._instances;
+      trav->get_cull_handler()->record_object(object, trav);
       continue;
     }
 

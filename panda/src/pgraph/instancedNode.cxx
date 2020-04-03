@@ -201,6 +201,18 @@ cull_callback(CullTraverser *trav, CullTraverserData &data) {
 
   CPT(InstanceList) instances = get_instances(current_thread);
 
+  if (data._instances != nullptr) {
+    // We are already under an instanced node.  Create a new combined list.
+    InstanceList *new_list = new InstanceList();
+    new_list->reserve(data._instances->size() * instances->size());
+    for (const InstanceList::Instance &parent_instance : *data._instances) {
+      for (const InstanceList::Instance &this_instance : *instances) {
+        new_list->append(parent_instance.get_transform()->compose(this_instance.get_transform()));
+      }
+    }
+    instances = new_list;
+  }
+
   if (data._view_frustum != nullptr || !data._cull_planes->is_empty()) {
     // Culling is on, so we need to figure out which instances are visible.
     Children children = data.node_reader()->get_children();
@@ -234,11 +246,12 @@ cull_callback(CullTraverser *trav, CullTraverserData &data) {
     return false;
   }
 
-  if (data._net_transform->is_identity()) {
+  if (data._net_transform->is_identity() || data._instances != nullptr) {
     // There is no net transform above this node, and we are not doing any
     // culling, so we can just use the instance list as-is.
     data._instances = std::move(instances);
   } else {
+    // Apply the existing net transform before every instance transform.
     InstanceList *new_list = new InstanceList(*instances);
     for (InstanceList::Instance &instance : *new_list) {
       instance.set_transform(data._net_transform->compose(instance.get_transform()));

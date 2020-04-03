@@ -16,6 +16,7 @@
 #include "bamReader.h"
 #include "bamWriter.h"
 #include "bitArray.h"
+#include "geomVertexWriter.h"
 
 TypeHandle InstanceList::_type_handle;
 
@@ -88,6 +89,36 @@ without(const BitArray &mask) const {
   }
 
   return new_list;
+}
+
+/**
+ * Returns a GeomVertexArrayData containing the matrices.
+ */
+CPT(GeomVertexArrayData) InstanceList::
+get_array_data(const GeomVertexArrayFormat *format) const {
+  CPT(GeomVertexArrayData) array_data = _cached_array;
+  if (array_data != nullptr) {
+    if (array_data->get_array_format() == format) {
+      return array_data;
+    }
+  }
+
+  nassertr(format != nullptr, nullptr);
+
+  size_t num_instances = size();
+  PT(GeomVertexArrayData) new_array = new GeomVertexArrayData(format, GeomEnums::UH_stream);
+  new_array->unclean_set_num_rows(num_instances);
+
+  {
+    GeomVertexWriter writer(new_array, Thread::get_current_thread());
+    writer.set_column("net_transform");
+    for (size_t i = 0; i < num_instances; ++i) {
+      writer.set_matrix4(_instances[i].get_mat());
+    }
+  }
+
+  _cached_array = new_array;
+  return new_array;
 }
 
 /**
@@ -177,4 +208,6 @@ fillin(DatagramIterator &scan, BamReader *manager) {
   for (size_t i = 0; i < num_instances; ++i) {
     manager->read_pointer(scan);
   }
+
+  _cached_array.clear();
 }

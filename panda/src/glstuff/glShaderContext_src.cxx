@@ -487,6 +487,9 @@ reflect_attribute(int i, char *name_buffer, GLsizei name_buflen) {
       bind._name = InternalName::get_texcoord();
       bind._append_uv = atoi(noprefix.substr(13).c_str());
 
+    } else if (noprefix == "ModelMatrix") {
+      bind._name = InternalName::make("net_transform");
+
     } else {
       GLCAT.error() << "Unrecognized vertex attrib '" << name_buffer << "'!\n";
       return;

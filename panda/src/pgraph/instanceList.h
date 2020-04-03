@@ -18,6 +18,7 @@
 #include "copyOnWriteObject.h"
 #include "transformState.h"
 #include "pvector.h"
+#include "geomVertexArrayData.h"
 
 class BitArray;
 class FactoryParams;
@@ -63,6 +64,9 @@ PUBLISHED:
     INLINE void set_scale(const LVecBase3 &);
     INLINE void set_scale(PN_stdfloat sx, PN_stdfloat sy, PN_stdfloat sz);
 
+    INLINE const LMatrix4 &get_mat() const;
+    INLINE void set_mat(const LMatrix4 &mat);
+
     INLINE const TransformState *get_transform() const;
     INLINE void set_transform(CPT(TransformState));
     MAKE_PROPERTY(transform, get_transform);
@@ -84,6 +88,7 @@ PUBLISHED:
   INLINE const Instance &operator [] (size_t n) const;
   INLINE Instance &operator [] (size_t n);
   INLINE void clear();
+  INLINE void reserve(size_t);
 
   void xform(const LMatrix4 &mat);
 
@@ -104,11 +109,15 @@ public:
 
   CPT(InstanceList) without(const BitArray &mask) const;
 
+  CPT(GeomVertexArrayData) get_array_data(const GeomVertexArrayFormat *format) const;
+
   virtual void output(std::ostream &out) const;
   virtual void write(std::ostream &out, int indent_level) const;
 
 private:
   Instances _instances;
+
+  mutable CPT(GeomVertexArrayData) _cached_array;
 
 public:
   static void register_with_read_factory();

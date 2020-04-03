@@ -42,6 +42,7 @@
 class FactoryParams;
 class GeomVertexColumn;
 class GeomVertexRewriter;
+class InstanceList;
 
 /**
  * This defines the actual numeric vertex data stored in a Geom, in the
@@ -159,6 +160,8 @@ PUBLISHED:
   void transform_vertices(const LMatrix4 &mat);
   void transform_vertices(const LMatrix4 &mat, int begin_row, int end_row);
   void transform_vertices(const LMatrix4 &mat, const SparseArray &rows);
+
+  CPT(GeomVertexData) get_instanced_data(const InstanceList *instances, Thread *current_thread) const;
 
   PT(GeomVertexData)
     replace_column(InternalName *name, int num_components,
@@ -352,6 +355,7 @@ private:
   static PStatCollector _scale_color_pcollector;
   static PStatCollector _set_color_pcollector;
   static PStatCollector _animation_pcollector;
+  static PStatCollector _instancing_pcollector;
 
   PStatCollector _char_pcollector;
   PStatCollector _skinning_pcollector;

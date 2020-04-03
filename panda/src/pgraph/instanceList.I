@@ -116,6 +116,22 @@ set_scale(PN_stdfloat sx, PN_stdfloat sy, PN_stdfloat sz) {
 /**
  *
  */
+INLINE const LMatrix4 &InstanceList::Instance::
+get_mat() const {
+  return get_transform()->get_mat();
+}
+
+/**
+ *
+ */
+INLINE void InstanceList::Instance::
+set_mat(const LMatrix4 &mat) {
+  set_transform(TransformState::make_mat(mat));
+}
+
+/**
+ *
+ */
 INLINE const TransformState *InstanceList::Instance::
 get_transform() const {
   return _transform.p();
@@ -135,6 +151,7 @@ set_transform(CPT(TransformState) transform) {
 INLINE void InstanceList::
 append(InstanceList::Instance instance) {
   _instances.push_back(std::move(instance));
+  _cached_array.clear();
 }
 
 /**
@@ -143,6 +160,7 @@ append(InstanceList::Instance instance) {
 INLINE void InstanceList::
 append(const TransformState *transform) {
   _instances.push_back(Instance(transform));
+  _cached_array.clear();
 }
 
 /**
@@ -184,6 +202,7 @@ operator [] (size_t n) const {
  */
 INLINE InstanceList::Instance &InstanceList::
 operator [] (size_t n) {
+  _cached_array.clear();
   return _instances[n];
 }
 
@@ -193,6 +212,15 @@ operator [] (size_t n) {
 INLINE void InstanceList::
 clear() {
   _instances.clear();
+  _cached_array.clear();
+}
+
+/**
+ * Reserves space for the given number of instances.
+ */
+INLINE void InstanceList::
+reserve(size_t n) {
+  _instances.reserve(n);
 }
 
 /**

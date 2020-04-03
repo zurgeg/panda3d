@@ -30,6 +30,7 @@
 #include "lightMutex.h"
 #include "callbackObject.h"
 #include "geomDrawCallbackData.h"
+#include "instanceList.h"
 
 class CullTraverser;
 class GeomMunger;
@@ -73,6 +74,10 @@ public:
   CPT(RenderState) _state;
   CPT(TransformState) _internal_transform;
   PT(CallbackObject) _draw_callback;
+  CPT(InstanceList) _instances;
+
+  //NB. The _internal_transform normally includes the net transform, except if
+  // the instances list is not nullptr.
 
 private:
   bool munge_points_to_quads(const CullTraverser *traverser, bool force);

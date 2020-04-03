@@ -173,6 +173,16 @@ munge_geom(GraphicsStateGuardianBase *gsg, GeomMunger *munger,
       std::swap(_munged_data, animated_vertices);
     }
 
+    if (_instances != nullptr) {
+      // We are under an InstancedNode.  Does the shader implement hardware
+      // instancing?
+      if (sattr != nullptr && sattr->get_flag(ShaderAttrib::F_hardware_instancing)) {
+        _munged_data = _munged_data->get_instanced_data(_instances, current_thread);
+        _state = _state->set_attrib(sattr->set_instance_count(_instances->size()));
+        _instances = nullptr;
+      }
+    }
+
 #ifndef NDEBUG
     if (show_vertex_animation) {
       GeomVertexDataPipelineReader data_reader(_munged_data, current_thread);
