@@ -33,6 +33,7 @@ set(P3GOBJ_HEADERS
   geomVertexRewriter.h geomVertexRewriter.I
   geomVertexWriter.h geomVertexWriter.I
   indexBufferContext.I indexBufferContext.h
+  instanceList.I instanceList.h
   internalName.I internalName.h
   lens.h lens.I
   material.I material.h materialPool.I materialPool.h
@@ -114,6 +115,7 @@ set(P3GOBJ_SOURCES
   geomVertexWriter.cxx
   indexBufferContext.cxx
   material.cxx
+  instanceList.cxx
   internalName.cxx
   lens.cxx
   materialPool.cxx matrixLens.cxx

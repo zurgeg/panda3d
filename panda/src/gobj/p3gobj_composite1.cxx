@@ -32,6 +32,7 @@
 #include "geomVertexRewriter.cxx"
 #include "geomVertexWriter.cxx"
 #include "indexBufferContext.cxx"
+#include "instanceList.cxx"
 #include "internalName.cxx"
 #include "lens.cxx"
 #include "material.cxx"

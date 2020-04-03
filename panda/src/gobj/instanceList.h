@@ -28,7 +28,7 @@ class FactoryParams;
  *
  * @since 1.11.0
  */
-class EXPCL_PANDA_PGRAPH InstanceList : public CopyOnWriteObject {
+class EXPCL_PANDA_GOBJ InstanceList : public CopyOnWriteObject {
 protected:
   virtual PT(CopyOnWriteObject) make_cow_copy() override;
 
@@ -43,7 +43,7 @@ PUBLISHED:
    *
    * @since 1.11.0
    */
-  class EXPCL_PANDA_PGRAPH Instance {
+  class EXPCL_PANDA_GOBJ Instance {
   public:
     INLINE explicit Instance();
     INLINE explicit Instance(CPT(TransformState) transform);
