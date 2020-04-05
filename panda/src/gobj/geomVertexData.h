@@ -113,7 +113,8 @@ PUBLISHED:
   INLINE PT(GeomVertexArrayData) modify_array(size_t i);
   INLINE PT(GeomVertexArrayDataHandle) modify_array_handle(size_t i);
   INLINE void set_array(size_t i, const GeomVertexArrayData *array);
-  MAKE_SEQ_PROPERTY(arrays, get_num_arrays, get_array, set_array);
+  INLINE void insert_array(size_t i, const GeomVertexArrayData *array);
+  MAKE_SEQ_PROPERTY(arrays, get_num_arrays, get_array, set_array, insert_array);
 
   INLINE const TransformTable *get_transform_table() const;
   void set_transform_table(const TransformTable *table);
@@ -160,8 +161,6 @@ PUBLISHED:
   void transform_vertices(const LMatrix4 &mat);
   void transform_vertices(const LMatrix4 &mat, int begin_row, int end_row);
   void transform_vertices(const LMatrix4 &mat, const SparseArray &rows);
-
-  CPT(GeomVertexData) get_instanced_data(const InstanceList *instances, Thread *current_thread) const;
 
   PT(GeomVertexData)
     replace_column(InternalName *name, int num_components,
@@ -355,7 +354,6 @@ private:
   static PStatCollector _scale_color_pcollector;
   static PStatCollector _set_color_pcollector;
   static PStatCollector _animation_pcollector;
-  static PStatCollector _instancing_pcollector;
 
   PStatCollector _char_pcollector;
   PStatCollector _skinning_pcollector;
@@ -524,6 +522,7 @@ public:
 
   PT(GeomVertexArrayData) modify_array(size_t i);
   void set_array(size_t i, const GeomVertexArrayData *array);
+  void insert_array(size_t i, const GeomVertexArrayData *array);
 
   int get_num_rows() const;
   bool set_num_rows(int n);

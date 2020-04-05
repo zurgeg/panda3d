@@ -20,4 +20,5 @@
 #include "geomDrawCallbackData.cxx"
 #include "geomNode.cxx"
 #include "geomTransformer.cxx"
+#include "instanceList.cxx"
 #include "instancedNode.cxx"

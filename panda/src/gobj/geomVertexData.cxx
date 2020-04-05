@@ -21,7 +21,6 @@
 #include "bamWriter.h"
 #include "pset.h"
 #include "indent.h"
-#include "instanceList.h"
 
 using std::ostream;
 
@@ -36,7 +35,6 @@ PStatCollector GeomVertexData::_convert_pcollector("*:Munge:Convert");
 PStatCollector GeomVertexData::_scale_color_pcollector("*:Munge:Scale color");
 PStatCollector GeomVertexData::_set_color_pcollector("*:Munge:Set color");
 PStatCollector GeomVertexData::_animation_pcollector("*:Animation");
-PStatCollector GeomVertexData::_instancing_pcollector("*:Instancing");
 
 
 /**
@@ -1087,37 +1085,6 @@ transform_vertices(const LMatrix4 &mat, const SparseArray &rows) {
       do_transform_vector_column(format, data, mat, begin_row, end_row);
     }
   }
-}
-
-/**
- * Returns a GeomVertexData that represents the results of computing the
- * instance arrays for this data.
- */
-CPT(GeomVertexData) GeomVertexData::
-get_instanced_data(const InstanceList *instances, Thread *current_thread) const {
-  PStatTimer timer(_instancing_pcollector, current_thread);
-
-  PT(GeomVertexData) instanced_data = new GeomVertexData(*this);
-  const GeomVertexArrayFormat *array_format = GeomVertexArrayFormat::get_instance_array_format();
-
-  // Ádd the new array.
-  {
-    CDWriter cdataw(instanced_data->_cycler, true);
-    GeomVertexFormat *new_format = new GeomVertexFormat(*cdataw->_format);
-    new_format->add_array(array_format);
-    cdataw->_format = GeomVertexFormat::register_format(new_format);
-
-    // It's OK to const-cast this, since we're returning a const GeomVertexData.
-    CPT(GeomVertexArrayData) new_array = instances->get_array_data(array_format);
-    cdataw->_arrays.push_back((GeomVertexArrayData *)new_array.p());
-
-    cdataw->_modified = Geom::get_next_modified();
-    cdataw->_animated_vertices.clear();
-  }
-
-  instanced_data->clear_cache_stage();
-
-  return instanced_data;
 }
 
 /**
@@ -2612,6 +2579,31 @@ set_array(size_t i, const GeomVertexArrayData *array) {
 
   if (_got_array_writers) {
     _array_writers[i] = new GeomVertexArrayDataHandle(_cdata->_arrays[i].get_write_pointer(), _current_thread);
+  }
+}
+
+/**
+ *
+ */
+void GeomVertexDataPipelineWriter::
+insert_array(size_t i, const GeomVertexArrayData *array) {
+  const GeomVertexArrayFormat *array_format = array->get_array_format();
+
+  if (i > _cdata->_arrays.size()) {
+    i = _cdata->_arrays.size();
+  }
+
+  GeomVertexFormat *new_format = new GeomVertexFormat(*_cdata->_format);
+  new_format->insert_array(i, array_format);
+  _cdata->_format = GeomVertexFormat::register_format(new_format);
+  _cdata->_arrays.insert(_cdata->_arrays.begin() + i, (GeomVertexArrayData *)array);
+
+  _object->clear_cache_stage();
+  _cdata->_modified = Geom::get_next_modified();
+  _cdata->_animated_vertices.clear();
+
+  if (_got_array_writers) {
+    _array_writers.insert(_array_writers.begin() + i, new GeomVertexArrayDataHandle(_cdata->_arrays[i].get_write_pointer(), _current_thread));
   }
 }
 

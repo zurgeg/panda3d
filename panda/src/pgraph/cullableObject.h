@@ -80,6 +80,7 @@ public:
   // the instances list is not nullptr.
 
 private:
+  void munge_instances(Thread *current_thread);
   bool munge_points_to_quads(const CullTraverser *traverser, bool force);
 
   static CPT(RenderState) get_flash_cpu_state();
@@ -118,6 +119,7 @@ private:
   static PStatCollector _munge_sprites_pcollector;
   static PStatCollector _munge_sprites_verts_pcollector;
   static PStatCollector _munge_sprites_prims_pcollector;
+  static PStatCollector _munge_instances_pcollector;
   static PStatCollector _sw_sprites_pcollector;
 
 public:

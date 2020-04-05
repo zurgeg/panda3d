@@ -39,6 +39,7 @@ set(P3PGRAPH_HEADERS
   geomDrawCallbackData.I geomDrawCallbackData.h
   geomNode.I geomNode.h
   geomTransformer.I geomTransformer.h
+  instanceList.I instanceList.h
   instancedNode.I instancedNode.h
   internalNameCollection.I internalNameCollection.h
   lensNode.I lensNode.h
@@ -140,6 +141,7 @@ set(P3PGRAPH_SOURCES
   geomDrawCallbackData.cxx
   geomNode.cxx
   geomTransformer.cxx
+  instanceList.cxx
   instancedNode.cxx
   internalNameCollection.cxx
   lensNode.cxx

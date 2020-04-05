@@ -39,6 +39,7 @@ PStatCollector CullableObject::_munge_geom_pcollector("*:Munge:Geom");
 PStatCollector CullableObject::_munge_sprites_pcollector("*:Munge:Sprites");
 PStatCollector CullableObject::_munge_sprites_verts_pcollector("*:Munge:Sprites:Verts");
 PStatCollector CullableObject::_munge_sprites_prims_pcollector("*:Munge:Sprites:Prims");
+PStatCollector CullableObject::_munge_instances_pcollector("*:Munge:Instances");
 PStatCollector CullableObject::_sw_sprites_pcollector("SW Sprites");
 
 TypeHandle CullableObject::_type_handle;
@@ -177,7 +178,9 @@ munge_geom(GraphicsStateGuardianBase *gsg, GeomMunger *munger,
       // We are under an InstancedNode.  Does the shader implement hardware
       // instancing?
       if (sattr != nullptr && sattr->get_flag(ShaderAttrib::F_hardware_instancing)) {
-        _munged_data = _munged_data->get_instanced_data(_instances, current_thread);
+        munge_instances(current_thread);
+
+        //TODO: set_attrib is bad, find a better way to pass instance count to GSG.
         _state = _state->set_attrib(sattr->set_instance_count(_instances->size()));
         _instances = nullptr;
       }
@@ -212,6 +215,22 @@ output(std::ostream &out) const {
   } else {
     out << "(null)";
   }
+}
+
+/**
+ * Returns a GeomVertexData that represents the results of computing the
+ * instance arrays for this data.
+ */
+void CullableObject::
+munge_instances(Thread *current_thread) {
+  PStatTimer timer(_munge_instances_pcollector, current_thread);
+
+  PT(GeomVertexData) instanced_data = new GeomVertexData(*_munged_data);
+  const GeomVertexArrayFormat *array_format = GeomVertexArrayFormat::get_instance_array_format();
+
+  CPT(GeomVertexArrayData) new_array = _instances->get_array_data(array_format);
+  instanced_data->insert_array((size_t)-1, new_array);
+  _munged_data = instanced_data;
 }
 
 /**
