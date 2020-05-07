@@ -231,8 +231,8 @@ cull_callback(CullTraverser *trav, CullTraverserData &data) {
       instance_data.apply_transform((*instances)[ii].get_transform());
 
       for (size_t ci = 0; ci < children.size(); ++ci) {
-        CullTraverserData child_data(instance_data, children.get_child(ci));
-        if (child_data.is_in_view(trav->get_camera_mask())) {
+        const PandaNode::DownConnection &child = children.get_child_connection(ci);
+        if (instance_data.is_child_in_view(child, trav->get_camera_mask())) {
           // Yep, the instance is in view.
           culled_instances.clear_bit(ii);
           break;
